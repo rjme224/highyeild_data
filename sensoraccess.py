@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Apr 15 09:22:38 2018
-
 @author: jasonmerrick
 """
 
@@ -11,8 +10,12 @@ from lxml import html
 import pandas as pd
 import io
 
-email = 'rj.merrick@ufl.edu'
-password = 'P^thon32'
+email = input("email you use for HighYieldAg.com  ")   #Username for Highyieldag.com website
+password = input("password for HighYieldAg.com   ")         #Password for Highyeildag.com 
+
+#dictionary containing the field id, field (North or South), and information
+#regarding the web address of each .csv file. csv_loc[i][2] is the last split
+#of the web address and is used when looping through the web addresses. 
 csv_loc = {'ASR-8103': ['B3I3N2', 'N', 'fvyKVh3jnUJe'],
            'ASR-8106': ['B2I3N5', 'N', 'K6eOtEurV4h8'],
            'ASR-8107': ['B2I2N2', 'S', 'Q7vuSRFe-amk'],
@@ -65,15 +68,19 @@ csv_loc = {'ASR-8103': ['B3I3N2', 'N', 'fvyKVh3jnUJe'],
            'ASR-8174': ['B3I1N2', 'S', 'Fmne2yMl7zqk'],
            'ASR-8298': ['B4I2N2', 'N', 'beGwxJaj_oFS'],
            'ASR-8301': ['B3I1N3', 'S', '12iz9I7cQLuP']}
+
+
+#i3 is a list of radios associated with the B?I3N? plots from which sensor 
+#based irrigation scheduling is derived
 i3 = ['ASR-8103', 'ASR-8108','ASR-8111','ASR-8112', 'ASR-8117', 'ASR-8120', 
            'ASR-8125', 'ASR-8129', 'ASR-8130', 'ASR-8137', 'ASR-8147', 
            'ASR-8154', 'ASR-8156', 'ASR-8157', 'ASR-8158', 
            'ASR-8161', 'ASR-8115']
 
 
-LOGIN_URL = "https://myfarm.highyieldag.com/login"
+LOGIN_URL = "https://myfarm.highyieldag.com/login" 
 
-session_requests = requests.session()
+session_requests = requests.session() #opoen a persistent session to the login
 
 # Get login csrf token
 result = session_requests.get(LOGIN_URL)
@@ -93,36 +100,38 @@ result = session_requests.post(LOGIN_URL, data=payload,
 
 
 # Scrape url
-lstrow = []
-fullrows = []
-full = pd.DataFrame()
-last = pd.DataFrame()
+lstrow = []  #empty list that in which the last row of the .csv is appended
+fullrows = [] #empty list in which all of the rows of the .csv are appended
+full = pd.DataFrame() #empty dataframe that will contain a concatination of 'fullrows'
+last = pd.DataFrame() #empty dataframe that will contain a concat..of 'lstrow'
+
+#loop through each radio used in controling irrigaiton (B?I3N(1,2,3))
 for i in i3:
-    URL = "http://myfarm.highyieldag.com/getcsv/{}/0".format(csv_loc[i][2])
-    result = session_requests.get(URL, headers=dict(referer=URL))
-    df = pd.read_csv(io.StringIO(result.text))
-    df['Sensor'] = csv_loc[i][0]
-    df['Field'] = csv_loc[i][1]
-    fullrows.append(df)
-    lastrow = df[-1:]
-    lstrow.append(lastrow)
+    URL = "http://myfarm.highyieldag.com/getcsv/{}/0".format(csv_loc[i][2]) 
+    result = session_requests.get(URL, headers=dict(referer=URL))       #produce a request object of the required .csv file
+    df = pd.read_csv(io.StringIO(result.text))                          #produce a pd.DataFrame object
+    df['Sensor'] = csv_loc[i][0]                                        #add 'Sensor'column to the df that contains the plot_id
+    df['Field'] = csv_loc[i][1]                                         #add 'Field' column to the df that contains (N)orth or (S)outh     
+    fullrows.append(df)                                                 #append df to the 'fullrows' list
+    lastrow = df[-1:]                                                   #create a df containing the last rows (most recent reading) of .csv
+    lstrow.append(lastrow)                                              #append the last row of df to the 'lastrow' list
 full = pd.concat(fullrows, ignore_index=True)
-last = pd.concat(lstrow, ignore_index=True)
-last['total'] = last.iloc[:, 1:6].sum(axis=1)
-last['pct'] = (last['total']/550)*100
+last = pd.concat(lstrow, ignore_index=True)                             #concat each list into one df
+last['total'] = last.iloc[:, 1:6].sum(axis=1)                           #add 'total' column that adds the columns from 1(5cm depth) to 6(45cm depth)
+last['pct'] = (last['total']/550)*100                                   #convert to percent and add 'pct' column to df
 
-min_ = last.loc[last['pct'] == last['pct'].min()]
+min_ = last.loc[last['pct'] == last['pct'].min()]                       #find the row associated with the minimum moisture value
 
-min_moisture = float(round(min_['pct'], 2))
-low_sensor = str(min_['Sensor'])
-low_field = str(min_['Field'])
-low_datestamp = str(min_['Timestamp (UTC)'])
+min_moisture = float(round(min_['pct'], 2))                             #set the minimum moisture percent rounde to 2 places
+low_sensor = str(min_['Sensor'])                                        #Sensor associated with the minimum moisture value
+low_field = str(min_['Field'])                                          #Field associated with the minimum moisture value    
+low_datestamp = str(min_['Timestamp (UTC)'])                            #Date/time minimum moisture was recoreded
 L_sens = low_sensor[5:12]
-L_field = low_field[7]
+L_field = low_field[5]                                                  #convert "LOW" returns into strings useful for printing        
 L_date = low_datestamp[5:24]
 
-session_requests.close()
-final = last[['Timestamp (UTC)','Sensor','Field','pct']]
+session_requests.close()                                                #Close the session
+final = last[['Timestamp (UTC)','Sensor','Field','pct']]                #create a printable df with desired information
 print(final)
 print("The lowest moisture content is {}% from {} in the {} field at {} UTC.".format(min_moisture,
                                                                                L_sens,
