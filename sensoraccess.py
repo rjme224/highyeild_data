@@ -9,9 +9,41 @@ import requests
 from lxml import html
 import pandas as pd
 import io
+import sys
+import datetime
 
-email = input("email you use for HighYieldAg.com  ")   #Username for Highyieldag.com website
-password = input("password for HighYieldAg.com   ")         #Password for Highyeildag.com 
+email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
+password = 'P^thon32'        #Password for Highyeildag.com 
+depth = float(input("What depth (in)?  "))
+if depth <= 4:
+    cell = 2
+    depth_mm = 100
+elif depth >=4 and depth <8:
+    cell = 3
+    depth_mm = 200
+elif depth >8 and depth <=12:
+    cell = 4
+    depth_mm = 300
+elif depth >12 and depth <=16:
+    cell = 5
+    depth_mm = 400
+elif depth >16 and depth <=20:
+    cell = 6
+    depth_mm = 500
+elif depth >20 and depth <=24:
+    cell = 7
+    depth_mm = 600
+elif depth >24 and depth <=28:
+    cell = 8
+    depth_mm = 700
+elif depth >28 and depth <=36:
+    cell = 9
+    depth_mm = 800
+else:
+    print("depth is out of range.")
+    sys.exit()
+
+        
 
 #dictionary containing the field id, field (North or South), and information
 #regarding the web address of each .csv file. csv_loc[i][2] is the last split
@@ -73,9 +105,11 @@ csv_loc = {'ASR-8103': ['B3I3N2', 'N', 'fvyKVh3jnUJe'],
 #i3 is a list of radios associated with the B?I3N? plots from which sensor 
 #based irrigation scheduling is derived
 i3 = ['ASR-8103', 'ASR-8108','ASR-8111','ASR-8112', 'ASR-8117', 'ASR-8120', 
-           'ASR-8125', 'ASR-8129', 'ASR-8130', 'ASR-8137', 'ASR-8147', 
+      #'ASR-8125,
+           'ASR-8129', 'ASR-8130', 'ASR-8137', 'ASR-8147', 
            'ASR-8154', 'ASR-8156', 'ASR-8157', 'ASR-8158', 
-           'ASR-8161', 'ASR-8115']
+           'ASR-8161', 'ASR-8115', 'ASR-8106', 'ASR-8152', 'ASR-8159', 
+           'ASR-8168']
 
 
 LOGIN_URL = "https://myfarm.highyieldag.com/login" 
@@ -109,31 +143,58 @@ last = pd.DataFrame() #empty dataframe that will contain a concat..of 'lstrow'
 for i in i3:
     URL = "http://myfarm.highyieldag.com/getcsv/{}/0".format(csv_loc[i][2]) 
     result = session_requests.get(URL, headers=dict(referer=URL))       #produce a request object of the required .csv file
-    df = pd.read_csv(io.StringIO(result.text))                          #produce a pd.DataFrame object
+    df = pd.read_csv(io.StringIO(result.text))  
+    df['Radio'] = i                                                     #produce a pd.DataFrame object
     df['Sensor'] = csv_loc[i][0]                                        #add 'Sensor'column to the df that contains the plot_id
     df['Field'] = csv_loc[i][1]                                         #add 'Field' column to the df that contains (N)orth or (S)outh     
     fullrows.append(df)                                                 #append df to the 'fullrows' list
     lastrow = df[-1:]                                                   #create a df containing the last rows (most recent reading) of .csv
     lstrow.append(lastrow)                                              #append the last row of df to the 'lastrow' list
-full = pd.concat(fullrows, ignore_index=True)
-last = pd.concat(lstrow, ignore_index=True)                             #concat each list into one df
-last['total'] = last.iloc[:, 1:6].sum(axis=1)                           #add 'total' column that adds the columns from 1(5cm depth) to 6(45cm depth)
-last['pct'] = (last['total']/550)*100                                   #convert to percent and add 'pct' column to df
+full = pd.concat(fullrows, ignore_index=True)                           #concat each list into one df
+last = pd.concat(lstrow, ignore_index=True)                             #add 'total' column that adds the columns from 1(5cm depth) to 6(45cm depth)
+last['total'] = last.iloc[:, 1:cell].sum(axis=1)                        #convert to percent and add 'pct' column to df   
+last['pct'] = (last['total']/depth_mm)*100                              #find the row associated with the minimum moisture value
 
-min_ = last.loc[last['pct'] == last['pct'].min()]                       #find the row associated with the minimum moisture value
 
-min_moisture = float(round(min_['pct'], 2))                             #set the minimum moisture percent rounde to 2 places
-low_sensor = str(min_['Sensor'])                                        #Sensor associated with the minimum moisture value
-low_field = str(min_['Field'])                                          #Field associated with the minimum moisture value    
-low_datestamp = str(min_['Timestamp (UTC)'])                            #Date/time minimum moisture was recoreded
-L_sens = low_sensor[5:12]
-L_field = low_field[5]                                                  #convert "LOW" returns into strings useful for printing        
-L_date = low_datestamp[5:24]
+#use system datetime and the depth from input to create a unique filename
+dateform = datetime.datetime.now()
+#convert input depth to cm and round to nearest 10cm to be consistent with 
+#raw data
+depthcm = str(int(round((depth/2.54),-1)))
+fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm.csv')
 
-session_requests.close()                                                #Close the session
-final = last[['Timestamp (UTC)','Sensor','Field','pct']]                #create a printable df with desired information
-print(final)
-print("The lowest moisture content is {}% from {} in the {} field at {} UTC.".format(min_moisture,
+#save the data to current working directory
+last.to_csv(fname)
+                                                                         
+
+def findmin(field_name):
+    '''Find the minimum sensor value.'''
+    sub = last.loc[last['Field'] == field_name] 
+    minrow = sub.loc[sub['pct'] == sub['pct'].min()]                        
+    min_moisture = float(round(minrow['pct'], 2))                            #set the minimum moisture percent rounde to 2 places
+    low_sensor = str(minrow['Sensor'])                                        #Sensor associated with the minimum moisture value
+    low_field = str(minrow['Field'])                                          #Field associated with the minimum moisture value    
+    low_datestamp = str(minrow['Timestamp (UTC)'])                            #Date/time minimum moisture was recoreded
+    L_sens = low_sensor[5:12]
+    L_field = low_field[5:7]                                                  #convert "LOW" returns into strings useful for printing        
+    L_date = low_datestamp[5:24]
+    df = sub[['Timestamp (UTC)', 'Sensor', 'Field', 'pct']]
+    df = df.sort_values('pct')
+    print(df)
+    print('')
+    print('')
+    print("The lowest moisture content is {}% from {} in the {} field at {} UTC.".format(min_moisture,
                                                                                L_sens,
                                                                                L_field,
                                                                                L_date))
+north = findmin('N')
+south = findmin('S')
+session_requests.close()                                                #Close the session
+#f = north[['Timestamp (UTC)','Sensor','Field','pct']] 
+#final = f.sort_values('pct')                                            #create a printable df with desired information
+#print(final)
+#print('')
+#print('')
+#print("The lowest moisture content is {}% from {} in the {} field at {} UTC.".format(min_moisture,
+#                                                                               L_sens,
+#                                                                               L_field,
