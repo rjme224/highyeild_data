@@ -102,14 +102,6 @@ csv_loc = {'ASR-8103': ['B3I3N2', 'N', 'fvyKVh3jnUJe'],
            'ASR-8301': ['B3I1N3', 'S', '12iz9I7cQLuP']}
 
 
-#i3 is a list of radios associated with the B?I3N? plots from which sensor 
-#based irrigation scheduling is derived
-i3 = ['ASR-8103', 'ASR-8108', 'ASR-8111', 'ASR-8112', 'ASR-8117', 'ASR-8120', 
-      'ASR-8125', 'ASR-8129', 'ASR-8130', 'ASR-8137', 'ASR-8147', 'ASR-8154',
-      'ASR-8156', 'ASR-8157', 'ASR-8158', 'ASR-8161', 'ASR-8115', 'ASR-8106',
-      'ASR-8152', 'ASR-8155', 'ASR-8159', 'ASR-8168']
-
-
 LOGIN_URL = "https://myfarm.highyieldag.com/login" 
 
 session_requests = requests.session() #opoen a persistent session to the login
@@ -138,7 +130,7 @@ full = pd.DataFrame() #empty dataframe that will contain a concatination of 'ful
 last = pd.DataFrame() #empty dataframe that will contain a concat..of 'lstrow'
 
 #loop through each radio used in controling irrigaiton (B?I3N(1,2,3))
-for i in i3:
+for i in csv_loc:
     URL = "http://myfarm.highyieldag.com/getcsv/{}/0".format(csv_loc[i][2]) 
     result = session_requests.get(URL, headers=dict(referer=URL))       #produce a request object of the required .csv file
     df = pd.read_csv(io.StringIO(result.text)) 
@@ -171,34 +163,27 @@ fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm.csv')
 last.to_csv(fname)
                                                                          
 
-def findmin(field_name):
-    '''Find the minimum sensor value.'''
-    sub = last.loc[last['Field'] == field_name] 
-    minrow = sub.loc[sub['pct'] == sub['pct'].min()]                        
-    min_moisture = float(round(minrow['pct'], 2))                            #set the minimum moisture percent rounde to 2 places
-    low_sensor = str(minrow['Sensor'])                                        #Sensor associated with the minimum moisture value
-    low_field = str(minrow['Field'])                                          #Field associated with the minimum moisture value    
-    low_datestamp = str(minrow.Datetime_UTC)                            #Date/time minimum moisture was recoreded
-    L_sens = low_sensor[5:12]
-    L_field = low_field[5:7]                                                  #convert "LOW" returns into strings useful for printing        
-    L_date = low_datestamp[5:24]
-    df = sub[['Datetime_UTC', 'Sensor', 'Field', 'pct']]
-    df = df.sort_values('pct')
-    print(df)
-    print('')
-    print('')
-    print("The lowest moisture content is {}% from {} in the {} field at {} UTC.".format(min_moisture,
-                                                                               L_sens,
-                                                                               L_field,
-                                                                               L_date))
-north = findmin('N')
-south = findmin('S')
-session_requests.close()                                                #Close the session
-#f = north[['Timestamp (UTC)','Sensor','Field','pct']] 
-#final = f.sort_values('pct')                                            #create a printable df with desired information
-#print(final)
-#print('')
-#print('')
-#print("The lowest moisture content is {}% from {} in the {} field at {} UTC.".format(min_moisture,
+#def findmin(field_name):
+#    '''Find the minimum sensor value.'''
+#    sub = last.loc[last['Field'] == field_name] 
+#    minrow = sub.loc[sub['pct'] == sub['pct'].min()]                        
+#    min_moisture = float(round(minrow['pct'], 2))                            #set the minimum moisture percent rounde to 2 places
+#    low_sensor = str(minrow['Sensor'])                                        #Sensor associated with the minimum moisture value
+#    low_field = str(minrow['Field'])                                          #Field associated with the minimum moisture value    
+#    low_datestamp = str(minrow.Datetime)                            #Date/time minimum moisture was recoreded
+#    L_sens = low_sensor[5:12]
+#    L_field = low_field[5:7]                                                  #convert "LOW" returns into strings useful for printing        
+#    L_date = low_datestamp[5:24]
+#    df = sub[['Datetime', 'Sensor', 'Field', 'pct']]
+#    df = df.sort_values('pct')
+#    print(df)
+#    print('')
+#    print('')
+#    print("The lowest moisture content is {}% from {} in the {} field at {} UTC.".format(min_moisture,
 #                                                                               L_sens,
 #                                                                               L_field,
+#                                                                               L_date))
+#north = findmin('N')
+#south = findmin('S')
+session_requests.close()                                                #Close the session
+                                                
