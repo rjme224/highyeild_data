@@ -104,12 +104,10 @@ csv_loc = {'ASR-8103': ['B3I3N2', 'N', 'fvyKVh3jnUJe'],
 
 #i3 is a list of radios associated with the B?I3N? plots from which sensor 
 #based irrigation scheduling is derived
-i3 = ['ASR-8103', 'ASR-8108','ASR-8111','ASR-8112', 'ASR-8117', 'ASR-8120', 
-      #'ASR-8125,
-           'ASR-8129', 'ASR-8130', 'ASR-8137', 'ASR-8147', 
-           'ASR-8154', 'ASR-8156', 'ASR-8157', 'ASR-8158', 
-           'ASR-8161', 'ASR-8115', 'ASR-8106', 'ASR-8152', 'ASR-8159', 
-           'ASR-8168']
+i3 = ['ASR-8103', 'ASR-8108', 'ASR-8111', 'ASR-8112', 'ASR-8117', 'ASR-8120', 
+      'ASR-8125', 'ASR-8129', 'ASR-8130', 'ASR-8137', 'ASR-8147', 'ASR-8154',
+      'ASR-8156', 'ASR-8157', 'ASR-8158', 'ASR-8161', 'ASR-8115', 'ASR-8106',
+      'ASR-8152', 'ASR-8155', 'ASR-8159', 'ASR-8168']
 
 
 LOGIN_URL = "https://myfarm.highyieldag.com/login" 
@@ -143,13 +141,19 @@ last = pd.DataFrame() #empty dataframe that will contain a concat..of 'lstrow'
 for i in i3:
     URL = "http://myfarm.highyieldag.com/getcsv/{}/0".format(csv_loc[i][2]) 
     result = session_requests.get(URL, headers=dict(referer=URL))       #produce a request object of the required .csv file
-    df = pd.read_csv(io.StringIO(result.text))  
+    df = pd.read_csv(io.StringIO(result.text)) 
+    #change column heading to an accessable form
+    df.columns = ['Datetime_UTC', 'M5','M15','M25','M35','M45','M55','M65','M75',
+                  'M85','T5','T15','T25','T35','T45','T55','T65','T75','T85',
+                  'S5','S15','S25','S35', 'S45','S55','S65','S75','S85']
+    
     df['Radio'] = i                                                     #produce a pd.DataFrame object
     df['Sensor'] = csv_loc[i][0]                                        #add 'Sensor'column to the df that contains the plot_id
     df['Field'] = csv_loc[i][1]                                         #add 'Field' column to the df that contains (N)orth or (S)outh     
     fullrows.append(df)                                                 #append df to the 'fullrows' list
     lastrow = df[-1:]                                                   #create a df containing the last rows (most recent reading) of .csv
     lstrow.append(lastrow)                                              #append the last row of df to the 'lastrow' list
+    print('finished {} {}'.format(csv_loc[i][0], csv_loc[i][1]))
 full = pd.concat(fullrows, ignore_index=True)                           #concat each list into one df
 last = pd.concat(lstrow, ignore_index=True)                             #add 'total' column that adds the columns from 1(5cm depth) to 6(45cm depth)
 last['total'] = last.iloc[:, 1:cell].sum(axis=1)                        #convert to percent and add 'pct' column to df   
@@ -160,7 +164,7 @@ last['pct'] = (last['total']/depth_mm)*100                              #find th
 dateform = datetime.datetime.now()
 #convert input depth to cm and round to nearest 10cm to be consistent with 
 #raw data
-depthcm = str(int(round((depth/2.54),-1)))
+depthcm = str(int(round((depth*2.54),-1)))
 fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm.csv')
 
 #save the data to current working directory
@@ -174,11 +178,11 @@ def findmin(field_name):
     min_moisture = float(round(minrow['pct'], 2))                            #set the minimum moisture percent rounde to 2 places
     low_sensor = str(minrow['Sensor'])                                        #Sensor associated with the minimum moisture value
     low_field = str(minrow['Field'])                                          #Field associated with the minimum moisture value    
-    low_datestamp = str(minrow['Timestamp (UTC)'])                            #Date/time minimum moisture was recoreded
+    low_datestamp = str(minrow.Datetime)                            #Date/time minimum moisture was recoreded
     L_sens = low_sensor[5:12]
     L_field = low_field[5:7]                                                  #convert "LOW" returns into strings useful for printing        
     L_date = low_datestamp[5:24]
-    df = sub[['Timestamp (UTC)', 'Sensor', 'Field', 'pct']]
+    df = sub[['Datetime', 'Sensor', 'Field', 'pct']]
     df = df.sort_values('pct')
     print(df)
     print('')
