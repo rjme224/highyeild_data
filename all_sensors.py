@@ -11,6 +11,7 @@ import pandas as pd
 import io
 import sys
 import datetime
+import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
 password = 'P^thon32'        #Password for Highyeildag.com 
@@ -157,9 +158,10 @@ dateform = datetime.datetime.now()
 #convert input depth to cm and round to nearest 10cm to be consistent with 
 #raw data
 depthcm = str(int(round((depth*2.54),-1)))
-fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm.csv')
+fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm_all.csv')
 
 #save the data to current working directory
+os.chdir('/Users/jasonmerrick/OneDrive_FL/OneDrive - University of Florida/Sensor_access/csv_files')
 last.to_csv(fname)
                                                                          
 
