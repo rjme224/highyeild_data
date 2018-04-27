@@ -161,9 +161,9 @@ depthcm = str(int(round((depth*2.54),-1)))
 fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm_all.csv')
 
 #save the data to current working directory
-os.chdir('/Users/jasonmerrick/OneDrive_FL/OneDrive - University of Florida/Sensor_access/csv_files')
+os.chdir('C:\\Users\\rj.merrick\\OneDrive - University of Florida\\Sensor_access\\csv_files\\all_sensors')
 last.to_csv(fname)
-full.to_csv(fname+'full')
+full.to_csv('full_'+fname)
                                                                          
 
 #def findmin(field_name):
