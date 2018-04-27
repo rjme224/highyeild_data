@@ -11,9 +11,11 @@ import pandas as pd
 import io
 import sys
 import datetime
+import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
-password = 'P^thon32'        #Password for Highyeildag.com 
+password = 'P^thon32'        #Password for Highyeildag.com
+directory = input('Where do you want to save .csv files?  '
 depth = float(input("What depth (in)?  "))
 if depth <= 4:
     cell = 2
@@ -167,7 +169,8 @@ dateform = datetime.datetime.now()
 depthcm = str(int(round((depth*2.54),-1)))
 fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm.csv')
 
-#save the data to current working directory
+#save the data to selected directory
+os.chdir(directory)                  
 last.to_csv(fname)
                                                                          
 
