@@ -15,7 +15,7 @@ import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
 password = 'P^thon32'        #Password for Highyeildag.com
-directory = input('Where do you want to save .csv files?  '
+directory = input('Where do you want to save .csv files?  ')
 depth = float(input("What depth (in)?  "))
 if depth <= 4:
     cell = 2
