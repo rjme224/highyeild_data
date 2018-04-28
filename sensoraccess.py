@@ -15,7 +15,7 @@ import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
 password = 'P^thon32'        #Password for Highyeildag.com
-directory = input('Where do you want to save .csv files?  ')
+directory = "/users/jasonmerrick/onedrive_Fl/onedrive - university of florida/sensor_access/csv_files/i3_sensors"
 depth = float(input("What depth (in)?  "))
 if depth <= 4:
     cell = 2
