@@ -1,9 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Apr 15 09:22:38 2018
-@author: jasonmerrick
-"""
+#! /anaconda3/bin/python
 
 import requests
 from lxml import html
@@ -15,7 +10,7 @@ import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
 password = 'P^thon32'        #Password for Highyeildag.com
-directory = "/users/jasonmerrick/onedrive_Fl/onedrive - university of florida/sensor_access/csv_files/i3_sensors"
+directory = "/users/jasonmerrick/onedrive_Fl/onedrive - university of florida/sensor_access/csv_files/min_csvs"
 depth = float(input("What depth (in)?  "))
 if depth <= 4:
     cell = 2
@@ -194,8 +189,13 @@ def findmin(field_name):
                                                                                L_sens,
                                                                                L_field,
                                                                                L_date))
+    return df
+
 north = findmin('N')
 south = findmin('S')
+os.chdir('/Users/jasonmerrick/OneDrive_FL/OneDrive - University of Florida/Sensor_access/csv_files/Field_csvs')
+north.to_csv(dateform.strftime('N%m%d%y%H%m_'+depthcm+'cm.csv'))
+south.to_csv(dateform.strftime('S%m%d%y%H%m_'+depthcm+'cm.csv'))
 session_requests.close()                                                #Close the session
 #f = north[['Timestamp (UTC)','Sensor','Field','pct']] 
 #final = f.sort_values('pct')                                            #create a printable df with desired information
