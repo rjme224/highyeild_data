@@ -1,4 +1,4 @@
-#! /anaconda3/bin/python
+#! /anaconda3/python
 
 import requests
 from lxml import html
@@ -9,8 +9,8 @@ import datetime
 import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
-password = 'P^thon32'        #Password for Highyeildag.com
-directory = "/users/jasonmerrick/onedrive_Fl/onedrive - university of florida/sensor_access/csv_files/min_csvs"
+password = 'Wildm@n32'        #Password for Highyeildag.com
+directory = r"C:/users/rjme2/onedrive - university of florida/sensor_access/csv_files/min_csvs"
 depth = float(input("What depth (in)?  "))
 if depth <= 4:
     cell = 2
@@ -109,7 +109,7 @@ i3 = ['ASR-8103', 'ASR-8108', 'ASR-8111', 'ASR-8112', 'ASR-8117', 'ASR-8120',
 
 LOGIN_URL = "https://myfarm.highyieldag.com/login" 
 
-session_requests = requests.session() #opoen a persistent session to the login
+session_requests = requests.session()#opoen a persistent session to the login
 
 # Get login csrf token
 result = session_requests.get(LOGIN_URL)
@@ -193,10 +193,10 @@ def findmin(field_name):
 
 north = findmin('N')
 south = findmin('S')
-os.chdir('/Users/jasonmerrick/OneDrive_FL/OneDrive - University of Florida/Sensor_access/csv_files/Field_csvs')
+os.chdir('/Users/rjme2/OneDrive - University of Florida/Sensor_access/csv_files/Field_csvs')
 north.to_csv(dateform.strftime('N%m%d%y%H%m_'+depthcm+'cm.csv'))
 south.to_csv(dateform.strftime('S%m%d%y%H%m_'+depthcm+'cm.csv'))
-session_requests.close()                                                #Close the session
+result.connection.close()                                                #Close the session
 #f = north[['Timestamp (UTC)','Sensor','Field','pct']] 
 #final = f.sort_values('pct')                                            #create a printable df with desired information
 #print(final)
