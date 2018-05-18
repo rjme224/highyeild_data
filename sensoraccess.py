@@ -6,6 +6,7 @@ import pandas as pd
 import io
 import sys
 import datetime
+import time
 import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
@@ -115,13 +116,13 @@ session_requests = requests.session()#opoen a persistent session to the login
 result = session_requests.get(LOGIN_URL)
 tree = html.fromstring(result.text)
 authenticity_token = list(set(tree.xpath
-                              ("//input[@name='csrf_token']/@value")))[0]
+                          ("//input[@name='csrf_token']/@value")))[0]
 # Create payload
 payload = {
-        "email": email,
-        "password": password,
-        "csrf_token": authenticity_token
-        }
+    "email": email,
+    "password": password,
+    "csrf_token": authenticity_token
+    }
 
 # Perform login
 result = session_requests.post(LOGIN_URL, data=payload,
@@ -151,6 +152,7 @@ for i in i3:
     lastrow = df[-1:]                                                   #create a df containing the last rows (most recent reading) of .csv
     lstrow.append(lastrow)                                              #append the last row of df to the 'lastrow' list
     print('finished {} {}'.format(csv_loc[i][0], csv_loc[i][1]))
+    time.sleep(1)
 full = pd.concat(fullrows, ignore_index=True)                           #concat each list into one df
 last = pd.concat(lstrow, ignore_index=True)                             #add 'total' column that adds the columns from 1(5cm depth) to 6(45cm depth)
 last['total'] = last.iloc[:, 1:cell].sum(axis=1)                        #convert to percent and add 'pct' column to df   
