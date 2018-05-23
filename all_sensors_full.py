@@ -14,7 +14,7 @@ import datetime
 import os
 
 email = 'rj.merrick@ufl.edu'   #Username for Highyieldag.com website
-password = 'P^thon32'        #Password for Highyeildag.com 
+password = 'Wildm@n32'        #Password for Highyeildag.com 
 depth = float(input("What depth (in)?  "))
 if depth <= 4:
     cell = 2
@@ -145,7 +145,8 @@ for i in csv_loc:
     df['Field'] = csv_loc[i][1]                                         #add 'Field' column to the df that contains (N)orth or (S)outh     
     fullrows.append(df)                                                 #append df to the 'fullrows' list
     lastrow = df[-1:]                                                   #create a df containing the last rows (most recent reading) of .csv
-    lstrow.append(lastrow)                                              #append the last row of df to the 'lastrow' list
+    lstrow.append(lastrow)   
+    df.to_csv('/Users/rjme2/OneDrive - University of Florida/Sensor_access/csv_files/all_sensors/csvs/{}{}.csv'.format(csv_loc[i][1],csv_loc[i][0]))                                          #append the last row of df to the 'lastrow' list
     print('finished {} {}'.format(csv_loc[i][0], csv_loc[i][1]))
 full = pd.concat(fullrows, ignore_index=True)                           #concat each list into one df
 last = pd.concat(lstrow, ignore_index=True)                             #add 'total' column that adds the columns from 1(5cm depth) to 6(45cm depth)
@@ -161,9 +162,10 @@ depthcm = str(int(round((depth*2.54),-1)))
 fname = dateform.strftime('%m%d%y%H%m_'+depthcm+'cm_all.csv')
 
 #save the data to current working directory
-os.chdir('/Users/jasonmerrick/OneDrive_FL/OneDrive - University of Florida/Sensor_access/csv_files/all_sensors')
+os.chdir('/Users/rj.merrick/OneDrive - University of Florida/Sensor_access/csv_files/all_sensors')
 last.to_csv(fname)
 full.to_csv('full_'+fname)
+last.to_csv('last'+fname)
                                                                          
 
 #def findmin(field_name):
